@@ -1,6 +1,6 @@
 {
   "name": "adivery",
-  "version": "0.1.0",
+  "version": "4.1.2",
   "description": "Simple plugin to display adivery ads in react-native android applications.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
@@ -11,12 +11,10 @@
     "src",
     "lib",
     "android",
-    "ios",
     "cpp",
     "adivery.podspec",
     "!lib/typescript/example",
     "!android/build",
-    "!ios/build",
     "!**/__tests__",
     "!**/__fixtures__",
     "!**/__mocks__"
@@ -28,7 +26,6 @@
     "prepare": "bob build",
     "release": "release-it",
     "example": "yarn --cwd example",
-    "pods": "cd example && pod-install --quiet",
     "bootstrap": "yarn example && yarn && yarn pods"
   },
   "keywords": [
@@ -36,13 +33,13 @@
     "ios",
     "android"
   ],
-  "repository": "https://github.com/adivery/adivery-react-native-plugin/adivery",
-  "author": "Adivery <havaliza@gmail.com> (https://github.com/adivery/adivery-react-native-plugin)",
+  "repository": "https://github.com/adivery/adivery-react-native-plugin",
+  "author": "Adivery <havaliza@gmail.com> (https://github.com/adivery/)",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/adivery/adivery-react-native-plugin/adivery/issues"
+    "url": "https://github.com/adivery/adivery-react-native-plugin/issues"
   },
-  "homepage": "https://github.com/adivery/adivery-react-native-plugin/adivery#readme",
+  "homepage": "https://github.com/adivery/adivery-react-native-plugin/#readme",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },

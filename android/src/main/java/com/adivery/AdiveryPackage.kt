@@ -8,10 +8,10 @@ import com.facebook.react.uimanager.ViewManager
 
 class AdiveryPackage : ReactPackage {
     override fun createNativeModules(reactContext: ReactApplicationContext): List<NativeModule> {
-        return emptyList()
+        return listOf(AdiveryModule(reactContext))
     }
 
     override fun createViewManagers(reactContext: ReactApplicationContext): List<ViewManager<*, *>> {
-        return listOf(AdiveryViewManager())
+        return listOf(AdiveryBannerAdViewManager())
     }
 }
