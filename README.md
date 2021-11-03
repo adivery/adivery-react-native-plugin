@@ -31,13 +31,13 @@ Adivery.configure(adiveryAppId)
 
 To display a rewarded ad first you need to prepare rewarded ad. this makes SDK to prepare rewarded ad and handle reloading it later.
 
-```
+```js
 Adivery.prepareRewardedAd(rewardedPlacement)
 ```
 
 To show rewarded ad to user use the following code.
 
-```
+```js
 Adivery.isLoaded(rewardedPlacement).then((isLoaded) => {
       if ( isLoaded ){
         console.log("calling show")
@@ -50,13 +50,13 @@ Adivery.isLoaded(rewardedPlacement).then((isLoaded) => {
 
 To display a interstitial ad first you need to prepare rewarded ad. this makes SDK to prepare interstitial ad and handle reloading it later.
 
-```
+```js
 Adivery.prepareInterstitialAd(interstitialPlacement)
 ```
 
 To show rewarded ad to user use the following code.
 
-```
+```js
 Adivery.isLoaded(interstitialPlacement).then((isLoaded) => {
       if ( isLoaded ){
         console.log("calling show")
@@ -69,13 +69,13 @@ Adivery.isLoaded(interstitialPlacement).then((isLoaded) => {
 
 To display a app-open ad first you need to prepare rewarded ad. this makes SDK to prepare app-open ad and handle reloading it later.
 
-```
+```js
 Adivery.prepareAppOpenAd(appOpenPlacement)
 ```
 
 To show rewarded ad to user use the following code.
 
-```
+```js
 Adivery.isLoaded(appOpenPlacement).then((isLoaded) => {
       if ( isLoaded ){
         console.log("calling show")
@@ -88,7 +88,7 @@ Adivery.isLoaded(appOpenPlacement).then((isLoaded) => {
 
 If you want to get notified when a ad is loaded or user clicked on add you can use the following code
 
-```
+```js
 Adivery.addGlobalListener(
       {
         onRewardedAdLoaded: (placementId) => {
@@ -138,7 +138,7 @@ Adivery.addGlobalListener(
 
 To display a banner ad just simply add this code to your render function.
 
-```
+```js
 <AdiveryBanner 
     style={{width:this.state.w, height:this.state.h}} 
     placementId={bannerPlacementId} 
