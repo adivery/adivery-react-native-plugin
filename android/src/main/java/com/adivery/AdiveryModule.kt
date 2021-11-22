@@ -224,7 +224,10 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
     })
   }
 
-  fun drawableToBitmap(drawable: Drawable): Bitmap? {
+  fun drawableToBitmap(drawable: Drawable?): Bitmap? {
+    if (drawable == null){
+      return null
+    }
     var bitmap: Bitmap? = null
     if (drawable is BitmapDrawable) {
       val bitmapDrawable = drawable
