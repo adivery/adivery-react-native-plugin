@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
-import { Button, Image, StyleSheet, Text, View } from 'react-native';
-import { Adivery, AdiveryBanner, Banner, LargeBanner, MediumRectangle } from 'adivery';
+import { Button, FlatList, Image, StyleSheet, Text, View } from 'react-native';
+import { Adivery, AdiveryBanner, Banner, LargeBanner, MediumRectangle, NativeAd } from 'adivery';
 
 const appOpenPlacement = "9e9dd375-a1fe-4c2b-8432-b5bf8a5095f6"
 const rewardedPlacement = "3f97dc4d-3e09-4024-acaf-931862c03ba8"
@@ -10,7 +10,9 @@ const adiveryAppId = "7e27fb38-5aff-473a-998f-437b89426f66"
 const bannerPlacementId = "2f71ec44-f30a-4043-9cc1-f32347a07f8b"
 const nativePlacementId = "25928bf1-d4f7-432c-aaf7-1780602796c3"
 
+
 Adivery.configure(adiveryAppId)
+Adivery.setUserId("test")
 Adivery.prepareInterstitialAd(interstitialPlacement)
 Adivery.prepareRewardedAd(rewardedPlacement)
 Adivery.prepareAppOpenAd(appOpenPlacement)
@@ -20,13 +22,7 @@ export default class  App extends Component {
     bannerSize: Banner,
     w: 320,
     h: 50,
-    nativeAdLoaded: false,
-    nativeAdHeadLine: "",
-    nativeAdDescription: "",
-    nativeAdAdvertiser: "",
-    nativeAdCallToAction: "",
-    nativeAdIcon: "",
-    nativeAdImage: "",
+    nativeAds: [],
   }  
   constructor(props){
     super(props)
@@ -148,7 +144,8 @@ export default class  App extends Component {
   showNative = async () => {
     try {
       const nativeAd = await Adivery.requestNativeAd(nativePlacementId)
-      Adivery.recordNativeAdImpression(nativePlacementId)
+      console.log("native ad loaded.")
+      Adivery.recordNativeAdImpression(nativeAd)
       this.displayNtiveAd(nativeAd)
     } catch (error){
       console.log(error)
@@ -157,41 +154,37 @@ export default class  App extends Component {
 
   displayNtiveAd = (nativeAd) => {
     this.setState({
-      nativeAdLoaded: true,
-      nativeAdHeadLine: nativeAd.headline,
-      nativeAdDescription: nativeAd.description,
-      nativeAdAdvertiser: nativeAd.advertiser,
-      nativeAdCallToAction: nativeAd.call_to_action,
-      nativeAdIcon: nativeAd.icon,
-      nativeAdImage: nativeAd.image,
+      nativeAds: [...this.state.nativeAds ,nativeAd],
     })
   }
 
-  nativeClick() {
-    Adivery.recordNativeAdClick(nativePlacementId)
+  nativeClick(nativeAd) {
+    Adivery.recordNativeAdClick(nativeAd)
   }
 
-  renderNative() {
-    if (this.state.nativeAdLoaded){
+  renderNative(nativeAd) {
+      if (nativeAd == undefined){
+        return (
+          <View/>
+        )
+      }
       return (
-        <View>
-          <View style={styles.adlayout}>
-          <Button title={this.state.nativeAdCallToAction} onPress={this.nativeClick} />
-          <View>
-            <Text >{this.state.nativeAdHeadLine}</Text>
-            <Text>{this.state.nativeAdDescription}</Text>
-          </View>
-          <View>
-          <Image style={{width:50, height: 50}} source={{uri:"data:image/png;base64," + this.state.nativeAdIcon}} />
-          <Text>{this.state.nativeAdAdvertiser}</Text>
-          </View>
-        </View>
-        <Image style={{width: 300, height:200}} source={{uri:"data:image/png;base64," + this.state.nativeAdImage}}/>
-        </View>
+        <View style={{backgroundColor: 'blue', padding:10}}>
+              <View style={styles.adlayout}>
+                <Button title={nativeAd.call_to_action} onPress={() => {this.nativeClick(nativeAd)}} />
+                <View>
+                  <Text >{nativeAd.headline}</Text>
+                  <Text>{nativeAd.description}</Text>
+                </View>
+                <View>
+                  <Image style={{width:50, height: 50}} source={{uri:"data:image/png;base64," + nativeAd.icon}} />
+                  <Text>{nativeAd.advertiser}</Text>
+                </View>
+              </View>
+              <Image style={{width: 300, height:200}} source={{uri:"data:image/png;base64," + nativeAd.image}}/>
+            </View>
+        
       )
-    } else {
-      return (<View/>)
-    }
   }
 
   render(){
@@ -226,8 +219,13 @@ export default class  App extends Component {
           </View>
         </View>
 
-        { this.renderNative() }
-          
+        {
+          this.renderNative(this.state.nativeAds[0])
+        }
+
+        {
+          this.renderNative(this.state.nativeAds[1])
+        }
       </View>
     );
   }
@@ -251,6 +249,6 @@ const styles = StyleSheet.create({
     margin: 4
   },
   adlayout: {
-    flexDirection: 'row'
+    flexDirection: 'row',
   },
 });

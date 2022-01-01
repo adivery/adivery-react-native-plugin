@@ -18,6 +18,8 @@ import com.adivery.sdk.networks.adivery.AdiveryNativeAd
 import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.ByteArrayOutputStream
+import java.util.*
+import kotlin.collections.HashMap
 
 const val REWARD_LOADED_EVENT_NAME = "AdiveryRewardedLoaded"
 const val REWARD_SHOWN_EVENT_NAME = "AdiveryRewardedShown"
@@ -52,6 +54,11 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   fun configure(appId: String) {
     Adivery.configure(reactContext.applicationContext as Application, appId)
     handleGlobalListener()
+  }
+
+  @ReactMethod
+  fun setUserId(userId: String) {
+    Adivery.setUserId(userId)
   }
 
   fun sendEvent(reactContext: ReactApplicationContext, eventName: String, params: WritableMap) {
@@ -209,7 +216,9 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
           } else {
             nativeAd.putNull("image")
           }
-          nativeMap[placementId] = ad
+          val id = UUID.randomUUID().toString()
+          nativeAd.putString("id", id)
+          nativeMap[id] = ad
           promise.resolve(nativeAd)
         }
       }
@@ -261,16 +270,16 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun recordNativeAdImpression(placementId: String) {
-    val ad = nativeMap[placementId]
+  fun recordNativeAdImpression(id: String) {
+    val ad = nativeMap[id]
     if (ad is AdiveryNativeAd) {
       ad.recordImpression()
     }
   }
 
   @ReactMethod
-  fun recordNativeAdClick(placementId: String) {
-    val ad = nativeMap[placementId]
+  fun recordNativeAdClick(id: String) {
+    val ad = nativeMap[id]
     if (ad is AdiveryNativeAd) {
       ad.recordClick()
     }

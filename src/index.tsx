@@ -6,6 +6,16 @@ import { NativeModules } from 'react-native';
 import AdiveryBanner from './adivery-banner-ad-view';
 const { AdiveryModule } = NativeModules
 
+type NativeAd = {
+  id: string,
+  headline: string,
+  description: string,
+  advertiser: string,
+  call_to_action : string,
+  icon: string,
+  image: string,
+}
+
 class AdiveryImpl {
 
   _onRewardedLoadedSubscription? : EmitterSubscription
@@ -136,21 +146,24 @@ class AdiveryImpl {
     const isLoaded =  await AdiveryModule.isLoaded(placementId)
     return isLoaded
   }
+  setUserId(userId: string){
+    AdiveryModule.setUserId(userId)
+  }
   showAd(placementId: string) {
     AdiveryModule.showAd(placementId)
   }
   showAppOpenAd(placementId: string){
     AdiveryModule.showAppOpenAd(placementId)
   }
-  async requestNativeAd(placementId: string) {
+  async requestNativeAd(placementId: string) : Promise<NativeAd> {
     const nativeAd = await AdiveryModule.requestNativeAd(placementId)
     return nativeAd
   }
-  recordNativeAdImpression(placementId: string){
-    AdiveryModule.recordNativeAdImpression(placementId)
+  recordNativeAdImpression(ad: NativeAd){
+    AdiveryModule.recordNativeAdImpression(ad.id)
   }
-  recordNativeAdClick(placementId: string){
-    AdiveryModule.recordNativeAdClick(placementId)
+  recordNativeAdClick(ad: NativeAd){
+    AdiveryModule.recordNativeAdClick(ad.id)
   }
   addGlobalListener(
     {
@@ -217,4 +230,4 @@ const MediumRectangle = 3;
 
 const Adivery = new AdiveryImpl()
 
-export { AdiveryBanner, Adivery, Banner, SmartBanner, LargeBanner, MediumRectangle }
+export { AdiveryBanner, Adivery, Banner, SmartBanner, LargeBanner, MediumRectangle, NativeAd }
