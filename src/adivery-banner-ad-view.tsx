@@ -1,4 +1,4 @@
-import { Banner, LargeBanner, MediumRectangle } from 'adivery';
+import { Banner, LargeBanner, MediumRectangle } from './banner-size';
 import React from 'react';
 import { EmitterSubscription, PixelRatio} from 'react-native';
 import {

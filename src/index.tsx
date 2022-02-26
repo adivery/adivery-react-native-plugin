@@ -4,6 +4,7 @@ import {
 } from 'react-native';
 import { NativeModules } from 'react-native';
 import AdiveryBanner from './adivery-banner-ad-view';
+import { Banner, SmartBanner, LargeBanner, MediumRectangle } from './banner-size';
 const { AdiveryModule } = NativeModules
 
 type NativeAd = {
@@ -24,7 +25,7 @@ class AdiveryImpl {
   _onRewardedCloseSubscription? : EmitterSubscription
   _onInterstitialLoadedSubscription? : EmitterSubscription
   _onInterstitialShownSubscription? : EmitterSubscription
-  _onInterstitialClickSubsctiption? : EmitterSubscription
+  _onInterstitialClickSubscription? : EmitterSubscription
   _onInterstitialCloseSubscription? : EmitterSubscription
   _onAppOpenLoadedSubscription? : EmitterSubscription
   _onAppOpenShownSubscription? : EmitterSubscription
@@ -96,7 +97,7 @@ class AdiveryImpl {
         this._onInterstitialAdShown(event.placementId)
       }
     })
-    this._onInterstitialClickSubsctiption = eventEmmiter.addListener(this.INTERSTITIAL_CLICKED_EVENT_NAME, (event) => {
+    this._onInterstitialClickSubscription = eventEmmiter.addListener(this.INTERSTITIAL_CLICKED_EVENT_NAME, (event) => {
       if (this._onInterstitialAdClicked){
         this._onInterstitialAdClicked(event.placementId)
       }
@@ -202,7 +203,7 @@ class AdiveryImpl {
     destroy(){
       this._onErrorSubscription?.remove()
       
-      this._onInterstitialClickSubsctiption?.remove()
+      this._onInterstitialClickSubscription?.remove()
       this._onInterstitialCloseSubscription?.remove()
       this._onInterstitialLoadedSubscription?.remove()
       this._onInterstitialShownSubscription?.remove()
@@ -218,15 +219,6 @@ class AdiveryImpl {
       this._onAppOpenShownSubscription?.remove()
     }
 }
-
-
-const Banner = 0;
-
-const SmartBanner = 1;
-
-const LargeBanner = 2;
-
-const MediumRectangle = 3;
 
 const Adivery = new AdiveryImpl()
 
