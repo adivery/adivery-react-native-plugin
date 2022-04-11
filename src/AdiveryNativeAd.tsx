@@ -20,6 +20,7 @@ const AdiveryNativeAd = ({ placementId, child, fallback }: Props) => {
     });
   }, [nativeAd]);
   if (nativeAd) {
+    Adivery.recordNativeAdImpression(nativeAd);
     return <View>{child(nativeAd)}</View>;
   }
   return fallback;
