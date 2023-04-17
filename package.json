@@ -1,6 +1,6 @@
 {
   "name": "adivery",
-  "version": "4.3.2",
+  "version": "4.6.0",
   "description": "Simple plugin to display adivery ads in react-native android applications.",
   "main": "lib/commonjs/index",
   "module": "lib/module/index",
