@@ -9,7 +9,7 @@ import {
   LargeBanner,
   MediumRectangle,
   NativeAd,
-} from 'adivery';
+} from 'adivery-publisher';
 
 const appOpenPlacement = '9e9dd375-a1fe-4c2b-8432-b5bf8a5095f6';
 const rewardedPlacement = '3f97dc4d-3e09-4024-acaf-931862c03ba8';
