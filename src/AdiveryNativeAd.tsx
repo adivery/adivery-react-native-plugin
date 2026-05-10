@@ -1,4 +1,4 @@
-import { Adivery, NativeAd } from 'adivery';
+import { Adivery, NativeAd } from './index';
 import React, { useEffect, useState } from 'react';
 import { View } from 'react-native';
 import type { ReactElement } from 'react';
