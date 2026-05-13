@@ -1,5 +1,6 @@
-import { NativeEventEmitter, EmitterSubscription } from 'react-native';
-import { NativeModules } from 'react-native';
+import { NativeEventEmitter, TurboModuleRegistry, NativeModules } from 'react-native';
+import type { EmitterSubscription } from 'react-native';
+import type { Spec } from './NativeAdivery';
 import AdiveryBanner from './adivery-banner-ad-view';
 import {
   Banner,
@@ -8,7 +9,10 @@ import {
   MediumRectangle,
 } from './banner-size';
 import AdiveryNativeAd from './AdiveryNativeAd';
-const { AdiveryModule } = NativeModules;
+
+const AdiveryModule: Spec =
+  TurboModuleRegistry.get<Spec>('AdiveryModule') ??
+  (NativeModules.AdiveryModule as Spec);
 
 type NativeAd = {
   id: string;
@@ -68,7 +72,7 @@ class AdiveryImpl {
     this.configureEventEmitter();
   }
   configureEventEmitter() {
-    const eventEmmiter = new NativeEventEmitter(NativeModules.Adivery);
+    const eventEmmiter = new NativeEventEmitter(NativeModules.AdiveryModule);
     this._onRewardedLoadedSubscription = eventEmmiter.addListener(
       this.REWARD_LOADED_EVENT_NAME,
       (event) => {
@@ -199,7 +203,7 @@ class AdiveryImpl {
   }
   async requestNativeAd(placementId: string): Promise<NativeAd> {
     const nativeAd = await AdiveryModule.requestNativeAd(placementId);
-    return nativeAd;
+    return nativeAd as unknown as NativeAd;
   }
   recordNativeAdImpression(ad: NativeAd) {
     AdiveryModule.recordNativeAdImpression(ad.id);
@@ -270,5 +274,5 @@ export {
   SmartBanner,
   LargeBanner,
   MediumRectangle,
-  NativeAd,
 };
+export type { NativeAd };

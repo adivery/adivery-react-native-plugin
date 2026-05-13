@@ -1,23 +1,6 @@
-buildscript {
-  // Buildscript is evaluated before everything else so we can't use getExtOrDefault
-  def kotlin_version = rootProject.ext.has('kotlinVersion') ? rootProject.ext.get('kotlinVersion') : project.properties['Adivery_kotlinVersion']
-
-  repositories {
-    mavenLocal()
-    google()
-    mavenCentral()
-    jcenter()
-  }
-
-  dependencies {
-    classpath 'com.android.tools.build:gradle:8.1.0'
-    // noinspection DifferentKotlinGradleVersion
-    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-  }
-}
-
 apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
+apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'com.facebook.react'
 
 def getExtOrDefault(name) {
   return rootProject.ext.has(name) ? rootProject.ext.get(name) : project.properties['Adivery_' + name]
@@ -35,7 +18,8 @@ android {
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
-
+    buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED",
+      (rootProject.hasProperty("newArchEnabled") ? rootProject.properties["newArchEnabled"] : "false").toString()
   }
 
   buildTypes {
@@ -47,17 +31,17 @@ android {
     disable 'GradleCompatible'
   }
   compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
   kotlinOptions {
-    jvmTarget = "1.8"
+    jvmTarget = "17"
+    freeCompilerArgs += ["-Xskip-metadata-version-check"]
   }
 }
 
 repositories {
   mavenCentral()
-  jcenter()
   google()
 
   def found = false
@@ -78,7 +62,6 @@ repositories {
       url defaultDir.toString()
       name androidSourcesName
     }
-
     logger.info(":${project.name}:reactNativeAndroidRoot ${defaultDir.canonicalPath}")
     found = true
   } else {
@@ -88,22 +71,14 @@ repositories {
       if (found) return true
       parentDir = parentDir.parentFile
 
-      def androidSourcesDir = new File(
-              parentDir,
-              'node_modules/react-native'
-      )
-
-      def androidPrebuiltBinaryDir = new File(
-              parentDir,
-              'node_modules/react-native/android'
-      )
+      def androidSourcesDir = new File(parentDir, 'node_modules/react-native')
+      def androidPrebuiltBinaryDir = new File(parentDir, 'node_modules/react-native/android')
 
       if (androidPrebuiltBinaryDir.exists()) {
         maven {
           url androidPrebuiltBinaryDir.toString()
           name androidSourcesName
         }
-
         logger.info(":${project.name}:reactNativeAndroidRoot ${androidPrebuiltBinaryDir.canonicalPath}")
         found = true
       } else if (androidSourcesDir.exists()) {
@@ -111,7 +86,6 @@ repositories {
           url androidSourcesDir.toString()
           name androidSourcesName
         }
-
         logger.info(":${project.name}:reactNativeAndroidRoot ${androidSourcesDir.canonicalPath}")
         found = true
       }
@@ -127,7 +101,6 @@ repositories {
 }
 
 dependencies {
-  // noinspection GradleDynamicVersion
-  api 'com.facebook.react:react-native:+'
+  implementation "com.facebook.react:react-android"
   implementation 'com.adivery:sdk:4.8.8'
 }

@@ -2,6 +2,16 @@
 
 Simple plugin to display adivery ads in react-native android applications.
 
+## Requirements
+
+- React Native **>= 0.71** (uses the React Native Gradle Plugin; supports both the legacy bridge and the New Architecture / TurboModule + Fabric interop)
+- **JDK 17**
+- **Android Gradle Plugin 8.x**
+- Kotlin **1.8+** on the consuming app's classpath
+- `compileSdk` **34+**, `minSdk` **23+**
+
+> **Using React Native < 0.71?** Install the previous release, [`adivery@4.6.6`](https://www.npmjs.com/package/adivery/v/4.6.6) — it ships the legacy (Paper) Android build with an embedded Kotlin classpath. Starting with `adivery@4.8.8`, the library applies the React Native Gradle Plugin and drops the embedded classpath, which requires RN 0.71 or above.
+
 ## Installation
 
 ```sh

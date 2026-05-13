@@ -19,6 +19,7 @@ import com.facebook.react.bridge.*
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.ByteArrayOutputStream
 import java.util.*
+import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.collections.HashMap
 
 const val REWARD_LOADED_EVENT_NAME = "AdiveryRewardedLoaded"
@@ -36,28 +37,28 @@ const val APP_OPEN_CLOSED_EVENT_NAME = "AdiveryAppOpenClosed"
 const val ON_ERROR_EVENT_NAME = "AdiveryOnError"
 
 class AdiveryModule(private val reactContext: ReactApplicationContext) :
-  ReactContextBaseJavaModule(reactContext) {
+  NativeAdiverySpec(reactContext) {
+
+  companion object {
+    const val NAME = "AdiveryModule"
+  }
 
   lateinit var listener: AdiveryListener
 
   val nativeMap = HashMap<String, NativeAd>()
 
   override fun getName(): String {
-    return "AdiveryModule"
-  }
-
-  override fun canOverrideExistingModule(): Boolean {
-    return false
+    return NAME
   }
 
   @ReactMethod
-  fun configure(appId: String) {
+  override fun configure(appId: String) {
     Adivery.configure(reactContext.applicationContext as Application, appId)
     handleGlobalListener()
   }
 
   @ReactMethod
-  fun setUserId(userId: String) {
+  override fun setUserId(userId: String) {
     Adivery.setUserId(userId)
   }
 
@@ -156,22 +157,22 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun prepareRewardedAd(placementId: String) {
+  override fun prepareRewardedAd(placementId: String) {
     Adivery.prepareRewardedAd(reactContext, placementId)
   }
 
   @ReactMethod
-  fun prepareInterstitialAd(placementId: String) {
+  override fun prepareInterstitialAd(placementId: String) {
     Adivery.prepareInterstitialAd(reactContext, placementId)
   }
 
   @ReactMethod
-  fun prepareAppOpenAd(placementId: String) {
+  override fun prepareAppOpenAd(placementId: String) {
     Adivery.prepareAppOpenAd(reactContext.currentActivity, placementId)
   }
 
   @ReactMethod
-  fun showAd(placementId: String) {
+  override fun showAd(placementId: String) {
     Log.d("Adivery", "showAd")
     Handler(Looper.getMainLooper()).post {
       Adivery.showAd(placementId)
@@ -179,7 +180,7 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun showAppOpenAd(placementId: String) {
+  override fun showAppOpenAd(placementId: String) {
     Log.d("Adivery", "showAppOpenAd")
     Handler(Looper.getMainLooper()).post {
       reactContext.currentActivity?.apply {
@@ -189,46 +190,55 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun isLoaded(placementId: String, isLoaded: Promise) {
+  override fun isLoaded(placementId: String, isLoaded: Promise) {
     Log.d("Adivery", "isLoaded")
     isLoaded.resolve(Adivery.isLoaded(placementId))
   }
 
   @ReactMethod
-  fun requestNativeAd(placementId: String, promise: Promise) {
+  override fun requestNativeAd(placementId: String, promise: Promise) {
+    val settled = AtomicBoolean(false)
     Adivery.requestNativeAd(reactContext, placementId, object : AdiveryNativeCallback() {
       override fun onAdLoaded(ad: NativeAd) {
-        val nativeAd = Arguments.createMap()
-        if (ad is AdiveryNativeAd) {
-          nativeAd.putString("headline", ad.headline)
-          nativeAd.putString("description", ad.description)
-          nativeAd.putString("advertiser", ad.advertiser)
-          nativeAd.putString("call_to_action", ad.callToAction)
-          val icon = drawableToBitmap(ad.icon)
-          if (icon != null) {
-            nativeAd.putString("icon", encodeToBase64(icon, CompressFormat.JPEG, 100))
-          } else {
-            nativeAd.putNull("icon")
-          }
-          val image = drawableToBitmap(ad.image)
-          if (image != null) {
-            nativeAd.putString("image", encodeToBase64(image, CompressFormat.JPEG, 100))
-          } else {
-            nativeAd.putNull("image")
-          }
-          val id = UUID.randomUUID().toString()
-          nativeAd.putString("id", id)
-          nativeMap[id] = ad
-          promise.resolve(nativeAd)
+        if (!settled.compareAndSet(false, true)) return
+        if (ad !is AdiveryNativeAd) {
+          promise.reject(
+            "E_UNSUPPORTED_AD_TYPE",
+            "Native ad type ${ad::class.java.simpleName} is not supported"
+          )
+          return
         }
+        val nativeAd = Arguments.createMap()
+        nativeAd.putString("headline", ad.headline)
+        nativeAd.putString("description", ad.description)
+        nativeAd.putString("advertiser", ad.advertiser)
+        nativeAd.putString("call_to_action", ad.callToAction)
+        val icon = drawableToBitmap(ad.icon)
+        if (icon != null) {
+          nativeAd.putString("icon", encodeToBase64(icon, CompressFormat.JPEG, 100))
+        } else {
+          nativeAd.putNull("icon")
+        }
+        val image = drawableToBitmap(ad.image)
+        if (image != null) {
+          nativeAd.putString("image", encodeToBase64(image, CompressFormat.JPEG, 100))
+        } else {
+          nativeAd.putNull("image")
+        }
+        val id = UUID.randomUUID().toString()
+        nativeAd.putString("id", id)
+        nativeMap[id] = ad
+        promise.resolve(nativeAd)
       }
 
       override fun onAdLoadFailed(reason: String) {
-        promise.reject(reason)
+        if (!settled.compareAndSet(false, true)) return
+        promise.reject("E_AD_LOAD_FAILED", reason)
       }
 
       override fun onAdShowFailed(reason: String) {
-        promise.reject(reason)
+        if (!settled.compareAndSet(false, true)) return
+        promise.reject("E_AD_SHOW_FAILED", reason)
       }
     })
   }
@@ -270,7 +280,7 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun recordNativeAdImpression(id: String) {
+  override fun recordNativeAdImpression(id: String) {
     val ad = nativeMap[id]
     if (ad is AdiveryNativeAd) {
       ad.recordImpression()
@@ -278,93 +288,11 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   }
 
   @ReactMethod
-  fun recordNativeAdClick(id: String) {
+  override fun recordNativeAdClick(id: String) {
     val ad = nativeMap[id]
     if (ad is AdiveryNativeAd) {
       ad.recordClick()
     }
-  }
-
-  @ReactMethod
-  fun addGlobalListener(
-    onRewardedAdLoaded: Promise?,
-    onRewardedAdShown: Promise?,
-    onRewardedAdClosed: Promise?,
-    onRewardedAdClicked: Promise?,
-    onInterstitialAdLoaded: Promise?,
-    onInterstitialAdShown: Promise?,
-    onInterstitialAdClicked: Promise?,
-    onInterstitialAdClosed: Promise?,
-    onAppOpenAdLoaded: Promise?,
-    onAppOpenAdShown: Promise?,
-    onAppOpenAdClicked: Promise?,
-    onAppOpenAdClosed: Promise?,
-    onError: Promise?
-  ) {
-    if (this::listener.isInitialized) {
-      Adivery.removeGlobalListener(listener)
-    }
-
-    listener = object : AdiveryListener() {
-      override fun onRewardedAdLoaded(placementId: String) {
-        onRewardedAdLoaded?.resolve(placementId)
-      }
-
-      override fun onRewardedAdShown(placementId: String) {
-        onRewardedAdShown?.resolve(placementId)
-      }
-
-      override fun onRewardedAdClicked(placementId: String) {
-        onRewardedAdClicked?.resolve(placementId)
-      }
-
-      override fun onRewardedAdClosed(placementId: String, isRewarded: Boolean) {
-        val map = Arguments.createMap()
-        map.putString("placementId", placementId)
-        map.putBoolean("isRewarded", isRewarded)
-        onRewardedAdClosed?.resolve(map)
-      }
-
-      override fun onInterstitialAdLoaded(placementId: String) {
-        onInterstitialAdLoaded?.resolve(placementId)
-      }
-
-      override fun onInterstitialAdShown(placementId: String) {
-        onInterstitialAdShown?.resolve(placementId)
-      }
-
-      override fun onInterstitialAdClicked(placementId: String) {
-        onInterstitialAdClicked?.resolve(placementId)
-      }
-
-      override fun onInterstitialAdClosed(placement: String) {
-        onInterstitialAdClosed?.resolve(placement)
-      }
-
-      override fun onAppOpenAdLoaded(placementId: String) {
-        onAppOpenAdLoaded?.resolve(placementId)
-      }
-
-      override fun onAppOpenAdShown(placementId: String) {
-        onAppOpenAdShown?.resolve(placementId)
-      }
-
-      override fun onAppOpenAdClicked(placementId: String) {
-        onAppOpenAdClicked?.resolve(placementId)
-      }
-
-      override fun onAppOpenAdClosed(placementId: String) {
-        onAppOpenAdClosed?.resolve(placementId)
-      }
-
-      override fun log(placementId: String, message: String) {
-        val map = Arguments.createMap()
-        map.putString("placementId", placementId)
-        map.putString("message", message)
-        onError?.resolve(map)
-      }
-    }
-
   }
 
 }
