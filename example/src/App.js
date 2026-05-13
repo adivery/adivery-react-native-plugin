@@ -33,7 +33,6 @@ export default class App extends Component {
   };
   constructor(props) {
     super(props);
-    Adivery.showAppOpenAd(appOpenPlacement);
     Adivery.addGlobalListener({
       onRewardedAdLoaded: (placementId) => {
         console.log('rewarded loaded');
@@ -119,6 +118,15 @@ export default class App extends Component {
     });
   }
 
+  showAppOpenAd() {
+    Adivery.isLoaded(appOpenPlacement).then((isLoaded) => {
+      if (isLoaded) {
+        console.log('calling show');
+        Adivery.showAppOpenAd(appOpenPlacement);
+      }
+    });
+  }
+
   showBanner = () => {
     this.setState({
       bannerSize: Banner,
@@ -198,6 +206,9 @@ export default class App extends Component {
           </View>
           <View style={styles.btn}>
             <Button title="interstitial" onPress={this.showInterstitial} />
+          </View>
+          <View style={styles.btn}>
+            <Button title="appOpen" onPress={this.showAppOpenAd} />
           </View>
         </View>
 
