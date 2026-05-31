@@ -127,5 +127,5 @@ repositories {
 dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
-  implementation 'com.adivery:sdk:4.6.1'
+  implementation 'com.adivery:sdk:4.8.8'
 }
