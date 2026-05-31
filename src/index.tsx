@@ -68,7 +68,7 @@ class AdiveryImpl {
     this.configureEventEmitter();
   }
   configureEventEmitter() {
-    const eventEmmiter = new NativeEventEmitter(NativeModules.Adivery);
+    const eventEmmiter = new NativeEventEmitter(NativeModules.AdiveryModule);
     this._onRewardedLoadedSubscription = eventEmmiter.addListener(
       this.REWARD_LOADED_EVENT_NAME,
       (event) => {

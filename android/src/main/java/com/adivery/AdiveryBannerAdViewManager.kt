@@ -19,8 +19,9 @@ import com.facebook.react.views.view.ReactViewGroup
 
 
 const val BANNER_LOADED_EVENT = "AdiveryBannerLoaded"
-const val BANNER_CLICKED_EVENT = "AdiveryBannerShown"
-const val BANNER_ERROR_EVENT = "AdiveryBannerClicked"
+const val BANNER_SHOWN_EVENT = "AdiveryBannerShown"
+const val BANNER_CLICKED_EVENT = "AdiveryBannerClicked"
+const val BANNER_ERROR_EVENT = "AdiveryBannerError"
 
 
 class BannerViewGroup(context: Context) : ReactViewGroup(context) {
@@ -68,7 +69,7 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
       .emit(eventName, params)
   }
 
-  override fun addView(parent: BannerViewGroup?, child: View?, index: Int) {
+  override fun addView(parent: BannerViewGroup, child: View, index: Int) {
     throw RuntimeException("AdiveryBanner cannot have subviews");
   }
 
@@ -100,19 +101,20 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
       override fun onAdShown() {
         val params = Arguments.createMap()
         params.putString("placementId", placementId)
-        sendEvent(reactContext, BANNER_CLICKED_EVENT, params)
+        sendEvent(reactContext, BANNER_SHOWN_EVENT, params)
       }
 
       override fun onAdClicked() {
         val params = Arguments.createMap()
         params.putString("placementId", placementId)
-        sendEvent(reactContext, BANNER_ERROR_EVENT, params)
+        sendEvent(reactContext, BANNER_CLICKED_EVENT, params)
       }
 
       override fun onError(reason: String) {
         val params = Arguments.createMap()
         params.putString("placementId", placementId)
-        sendEvent(reactContext, "AdiveryBannerError", params)
+        params.putString("message", reason)
+        sendEvent(reactContext, BANNER_ERROR_EVENT, params)
       }
     })
     layout.addView(banner)

@@ -6,11 +6,10 @@ buildscript {
     mavenLocal()
     google()
     mavenCentral()
-    jcenter()
   }
 
   dependencies {
-    classpath 'com.android.tools.build:gradle:4.2.2'
+    classpath 'com.android.tools.build:gradle:8.7.2'
     // noinspection DifferentKotlinGradleVersion
     classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
   }
@@ -28,9 +27,10 @@ def getExtOrIntegerDefault(name) {
 }
 
 android {
+  namespace "com.adivery"
   compileSdkVersion getExtOrIntegerDefault('compileSdkVersion')
   defaultConfig {
-    minSdkVersion 16
+    minSdkVersion 23
     targetSdkVersion getExtOrIntegerDefault('targetSdkVersion')
     versionCode 1
     versionName "1.0"
@@ -46,14 +46,16 @@ android {
     disable 'GradleCompatible'
   }
   compileOptions {
-    sourceCompatibility JavaVersion.VERSION_1_8
-    targetCompatibility JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+  kotlinOptions {
+    jvmTarget = "17"
   }
 }
 
 repositories {
   mavenCentral()
-  jcenter()
   google()
 
   def found = false
@@ -122,11 +124,8 @@ repositories {
   }
 }
 
-def kotlin_version = getExtOrDefault('kotlinVersion')
-
 dependencies {
   // noinspection GradleDynamicVersion
   api 'com.facebook.react:react-native:+'
   implementation 'com.adivery:sdk:4.6.1'
-  implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }

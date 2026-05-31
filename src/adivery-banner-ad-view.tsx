@@ -22,20 +22,24 @@ type RCTBannerProps = {
   placementId: string;
   bannerSize: number;
   onAdLoaded: () => void;
+  onAdShown: () => void;
   onAdClicked: () => void;
   onError: (message: string) => void;
 };
 
 class AdiveryBanner extends React.Component<RCTBannerProps> {
   onAdLoaded: () => void;
+  onAdShown: () => void;
   onAdClicked: () => void;
   onError: (message: string) => void;
 
   adLoadSubscription?: EmitterSubscription;
+  adShownSubscription?: EmitterSubscription;
   adClickedSubscription?: EmitterSubscription;
   adErrorSubscription?: EmitterSubscription;
 
   BANNER_LOADED_EVENT = 'AdiveryBannerLoaded';
+  BANNER_SHOWN_EVENT = 'AdiveryBannerShown';
   BANNER_CLICKED_EVENT = 'AdiveryBannerClicked';
   BANNER_ERROR_EVENT = 'AdiveryBannerError';
 
@@ -45,20 +49,30 @@ class AdiveryBanner extends React.Component<RCTBannerProps> {
     super(props);
     this.props = props;
     this._onAdLoaded = this._onAdLoaded.bind(this);
+    this._onAdShown = this._onAdShown.bind(this);
     this._onAdClicked = this._onAdClicked.bind(this);
     this._onError = this._onError.bind(this);
     this.onAdLoaded = props.onAdLoaded;
+    this.onAdShown = props.onAdShown;
     this.onAdClicked = props.onAdClicked;
     this.onError = props.onError;
   }
 
   componentDidMount() {
-    const eventEmmiter = new NativeEventEmitter(NativeModules.Adivery);
+    const eventEmmiter = new NativeEventEmitter(NativeModules.AdiveryModule);
     this.adLoadSubscription = eventEmmiter.addListener(
       this.BANNER_LOADED_EVENT,
       (event) => {
         if (event.placementId == this.props.placementId) {
           this._onAdLoaded();
+        }
+      }
+    );
+    this.adShownSubscription = eventEmmiter.addListener(
+      this.BANNER_SHOWN_EVENT,
+      (event) => {
+        if (event.placementId == this.props.placementId) {
+          this._onAdShown();
         }
       }
     );
@@ -82,6 +96,7 @@ class AdiveryBanner extends React.Component<RCTBannerProps> {
 
   componentWillUnmount() {
     this.adLoadSubscription?.remove();
+    this.adShownSubscription?.remove();
     this.adClickedSubscription?.remove();
     this.adErrorSubscription?.remove();
   }
@@ -91,6 +106,13 @@ class AdiveryBanner extends React.Component<RCTBannerProps> {
       return;
     }
     this.onAdLoaded();
+  }
+
+  _onAdShown() {
+    if (!this.onAdShown) {
+      return;
+    }
+    this.onAdShown();
   }
 
   _onAdClicked() {
