@@ -70,17 +70,24 @@ React Native 0.85+ in bridgeless mode loads the JS bundle from APK assets, NOT f
 The bundle must be pre-generated before building the APK.
 
 ```bash
-mkdir -p example/android/app/src/main/assets
+# Run from example/ — metro.config.js lives there, and the Metro/Babel
+# module-resolver alias that maps the package name to ../src is only applied
+# when the bundler's project root is example/. Running from the repo root fails
+# with "No Metro config found".
+cd example
+mkdir -p android/app/src/main/assets
 
 node_modules/.bin/react-native bundle \
   --platform android \
   --dev true \
   --entry-file index.js \
-  --bundle-output example/android/app/src/main/assets/index.android.bundle \
-  --assets-dest example/android/app/src/main/res
+  --bundle-output android/app/src/main/assets/index.android.bundle \
+  --assets-dest android/app/src/main/res
 ```
 
-Run this from the project root (not inside `example/`). The entry file `index.js` re-exports from `src/index.tsx`.
+The entry file is `example/index.js`, which registers `./src/App`.
+
+**Known issue — `Unable to resolve module adivery-publisher`**: `example/src/App.js` must import from `'adivery'` (the current package name), NOT the old `'adivery-publisher'`. `example/babel.config.js` aliases `pak.name` (`adivery`) → `../src`, so any other import string won't resolve. Fix the import if you hit this.
 
 ---
 
@@ -120,59 +127,127 @@ adb logcat --pid=$(adb shell pidof -s com.example.adivery) 2>/dev/null | head -1
 
 ---
 
-## 6. Publish to npm (only when user explicitly asks)
+## 6. Publish to npm (only when the user explicitly asks)
 
-The project uses `release-it` (configured in `package.json` under `"release-it"`). It handles git tagging, GitHub release, changelog generation, and npm publish in one step.
+The project uses `release-it` (configured in `package.json` under `"release-it"`): git tag `v${version}`, optional GitHub release, conventional-changelog, and `npm publish`.
 
 ### Prerequisites
-- Make sure you are logged in or have an automation token in `~/.npmrc`
-- Run `yarn prepare` first to ensure `lib/` is up to date
-
-### Login check
-```bash
-npm whoami
-```
-Note: automation tokens return 401 for `whoami` — that is expected and fine. They still publish.
+- Be logged in to npm, or have an automation token in `~/.npmrc` (`npm whoami` should print the user; automation tokens may 401 on `whoami` yet still publish).
+- The version in `package.json` is normally already bumped and committed (the "Release X.Y.Z version" commit, which also bumps the native `com.adivery:sdk` dependency in `android/build.gradle`). **Confirm the exact version with the Read tool right before publishing** — read the file directly rather than relying on a digit printed through shell output (output filters/proxies can reformat values, and amended commits can shift what's in the tree).
+- Run `yarn prepare` so `lib/` is up to date.
 
 If not logged in and no automation token:
 > "You need to authenticate with npm. Run `npm login` in your terminal (type `! npm login` in this chat) and follow the prompts."
 
-### Normal release (bumps version, tags, publishes)
-```bash
-yarn release
-```
-`release-it` will interactively ask which semver bump (patch / minor / major) to use, show a changelog preview, then publish.
+### Recommended command (publish the already-committed version)
 
-### Publish the current version without bumping
-If the version in `package.json` is already correct and you don't want `release-it` to increment it:
-```bash
-yarn release --no-increment
-```
-This skips the version bump and publishes exactly what is in `package.json`.
+This repo's release commit already bumps `package.json`, the working tree usually has untracked `example/` build artifacts, and the repo has no prior tags. The invocation that works under those conditions:
 
-### Skip GitHub release (npm-only)
 ```bash
-yarn release --no-github.release
+node_modules/.bin/release-it \
+  --no-increment \                  # version is already set + committed
+  --no-git.commit \                 # the "Release X" commit already exists; don't make an empty one
+  --no-git.requireCleanWorkingDir \ # tolerate untracked example/ build artifacts
+  --ci                              # non-interactive (no TTY in this harness)
 ```
 
-### If 2FA is required
-`release-it` delegates to `npm publish` internally. If npm rejects with `E403 Two-factor authentication required`:
+Notes:
+- Use the `--no-git.requireCleanWorkingDir` form. `--git.requireCleanWorkingDir=false` does **not** disable the check.
+- Always **dry-run first** to preview the exact sequence: append `--dry-run` to the command above.
+- release-it order is **npm publish → git tag → git push → GitHub release**. Safety boundary:
+  - A failure **at or before npm publish** is safe to retry (the version isn't live yet).
+  - A failure **after npm publish** means the version IS live — do NOT re-run release-it (it will 403 "version exists"); finish tag/push/GitHub-release manually.
+
+### GitHub release behavior depends on whether `GITHUB_TOKEN` is set
+- **`GITHUB_TOKEN` is set** → add `--no-github.release` so release-it does **npm + tag + push only**. Step 7 then creates the GitHub release *with the release APK attached*, after user confirmation:
+  ```bash
+  node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --no-github.release --ci
+  ```
+- **`GITHUB_TOKEN` is not set** → run the command WITHOUT `--no-github.release`. With no token, release-it falls back to printing a **pre-filled web URL** for a manual GitHub release (the previous behavior). npm + tag + push still happen.
+
+### If npm 2FA / OTP is required
+If npm rejects with `E403 Two-factor authentication required` / `EOTP`, ask the user for their OTP and retry (a failed publish is harmless):
 ```bash
-yarn release --npm.publishArgs="--otp=<OTP>"
+node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --ci --npm.publishArgs="--otp=<OTP>"
 ```
-Ask the user: "Please enter your npm OTP (from your authenticator app)."
+(Or use a Granular Access Token with the "bypass 2FA" option — then no OTP is needed.)
 
-Alternatively, use a Granular Access Token with the "bypass 2FA" option from npmjs.com → Access Tokens — then no OTP is needed.
+### Verify (with the Read tool / a raw shell, not a filtering proxy)
+```bash
+npm view adivery version                     # should equal package.json
+git ls-remote origin refs/tags/v<version>    # tag pushed
+```
 
-### Fallback: plain npm publish (bypasses release-it entirely)
-Only use this if release-it itself is broken:
+### Fallback: plain `npm publish` (only if release-it itself is broken)
 ```bash
 npm publish
 ```
+`E404 Not Found` for a previously-published package usually means not authenticated — check `~/.npmrc` for a valid `_authToken`.
 
-If you get `E404 Not Found` for a package that was previously published, the user is likely not authenticated. Check `~/.npmrc` for a valid `_authToken`.
+**Security reminder**: never log the contents of `~/.npmrc`. If an npm or GitHub token appears in output, advise the user to revoke it (npmjs.com → Access Tokens / GitHub → Developer settings → Personal access tokens).
 
-**Security reminder**: never log the contents of `~/.npmrc`. If an auth token appears in terminal output, advise the user to revoke it immediately at npmjs.com → Access Tokens.
+---
+
+## 7. Create the GitHub release with the release APK
+
+Run this **after** step 6 has published to npm and pushed the `v<version>` tag.
+
+GitHub Releases and asset uploads go through the **GitHub REST API over HTTPS** — the SSH key used for `git push` cannot create a release or upload an asset. So the behavior depends entirely on whether `GITHUB_TOKEN` is available:
+
+```bash
+[ -n "$GITHUB_TOKEN" ] && echo "token present" || echo "no token"
+```
+
+### If `GITHUB_TOKEN` is set → automated, on user confirmation (not manual)
+
+1. **Build the release APK:**
+   ```bash
+   cd example/android
+   ./gradlew assembleRelease
+   ```
+   Output: `example/android/app/build/outputs/apk/release/app-release.apk`.
+   ⚠️ This requires a release signing config/keystore. If the example only has debug signing, `assembleRelease` may fail or produce an unsigned APK — in that case ask the user for the keystore, or fall back to the debug APK from step 4 (`app-debug.apk`) and tell them it is debug-signed.
+
+2. **Ask the user to confirm before publishing** (the release is public — never publish without an explicit yes):
+   > "Publish GitHub release v<version> with `app-release.apk` attached? (yes/no)"
+
+3. **On confirmation**, create the release for the existing tag, upload the APK, and publish — in one step. Prefer `gh` if installed:
+   ```bash
+   gh release create v<version> \
+     example/android/app/build/outputs/apk/release/app-release.apk \
+     --repo adivery/adivery-react-native-plugin \
+     --title "Release <version>" \
+     --notes "<release notes>"
+   ```
+   If `gh` is NOT installed, use the REST API (two calls):
+   ```bash
+   # a) create the release → capture "id" from the JSON response
+   curl -sS -X POST \
+     -H "Authorization: Bearer $GITHUB_TOKEN" \
+     -H "Accept: application/vnd.github+json" \
+     https://api.github.com/repos/adivery/adivery-react-native-plugin/releases \
+     -d '{"tag_name":"v<version>","name":"Release <version>","body":"<notes>","draft":false,"prerelease":false}'
+
+   # b) upload the APK as an asset (RELEASE_ID from step a)
+   curl -sS -X POST \
+     -H "Authorization: Bearer $GITHUB_TOKEN" \
+     -H "Content-Type: application/vnd.android.package-archive" \
+     --data-binary @example/android/app/build/outputs/apk/release/app-release.apk \
+     "https://uploads.github.com/repos/adivery/adivery-react-native-plugin/releases/<RELEASE_ID>/assets?name=app-release.apk"
+   ```
+
+### If `GITHUB_TOKEN` is NOT set → fall back to the previous (manual) flow
+
+Do not attempt an automated upload. Give the user the pre-filled web URL to open, attach the APK by drag-and-drop, and publish themselves (this is what step 6's release-it run prints when no token is present):
+
+```
+https://github.com/adivery/adivery-react-native-plugin/releases/new?tag=v<version>&title=Release+<version>
+```
+
+### Notes
+- **Changelog heading**: conventional-changelog computes the *next* semver from commit types (a `feat:` commit makes it look like a minor bump), so the generated notes can show a higher version than what you published. Edit the heading to `<version>` before publishing.
+- **Token scope**: the create-release endpoint requires `contents=write` (confirmed via the `x-accepted-github-permissions` response header). A fine-grained `GITHUB_TOKEN` needs **Contents: Read & write** on this repo; a classic PAT needs the `public_repo` scope (the repo is public). A token pasted into chat is exposed; advise rotating it after use.
+- **`adivery` org policy (important)**: the `adivery` organization **forbids fine-grained PATs whose lifetime exceeds 366 days**. A token with "No expiration" or a >1-year expiry gets **403 "Resource not accessible by personal access token"** on *every* org-repo call (even reads). If you hit that 403, the fix is to regenerate the fine-grained PAT with an **expiration ≤ 366 days**, repository access to `adivery/adivery-react-native-plugin`, and **Contents: Read & write** — then retry. (Diagnose with `curl -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/repos/adivery/adivery-react-native-plugin` — the 403 body states the exact policy.)
 
 ---
 
