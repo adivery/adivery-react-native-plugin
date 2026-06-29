@@ -20,7 +20,7 @@ import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.ByteArrayOutputStream
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.collections.HashMap
+import java.util.concurrent.ConcurrentHashMap
 
 const val REWARD_LOADED_EVENT_NAME = "AdiveryRewardedLoaded"
 const val REWARD_SHOWN_EVENT_NAME = "AdiveryRewardedShown"
@@ -45,7 +45,7 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
 
   lateinit var listener: AdiveryListener
 
-  val nativeMap = HashMap<String, NativeAd>()
+  val nativeMap = ConcurrentHashMap<String, NativeAd>()
 
   override fun getName(): String {
     return NAME
