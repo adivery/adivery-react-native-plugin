@@ -224,11 +224,16 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
       }
 
       override fun onAdLoadFailed(reason: String) {
-        promise.reject(reason)
+        promise.reject("AD_LOAD_FAILED", reason)
       }
 
       override fun onAdShowFailed(reason: String) {
-        promise.reject(reason)
+        // The promise is already resolved in onAdLoaded; rejecting it here is dropped by RN.
+        // Surface show-failures via the global error event instead.
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        params.putString("message", reason)
+        sendEvent(reactContext, ON_ERROR_EVENT_NAME, params)
       }
     })
   }
