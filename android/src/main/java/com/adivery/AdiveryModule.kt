@@ -33,6 +33,11 @@ const val APP_OPEN_LOADED_EVENT_NAME = "AdiveryAppOpenLoaded"
 const val APP_OPEN_SHOWN_EVENT_NAME = "AdiveryAppOpenShown"
 const val APP_OPEN_CLICKED_EVENT_NAME = "AdiveryAppOpenClick"
 const val APP_OPEN_CLOSED_EVENT_NAME = "AdiveryAppOpenClosed"
+const val OFFER_WALL_LOADED_EVENT_NAME = "AdiveryOfferWallLoaded"
+const val OFFER_WALL_SHOWN_EVENT_NAME = "AdiveryOfferWallShown"
+const val OFFER_WALL_CLICKED_EVENT_NAME = "AdiveryOfferWallClick"
+const val OFFER_WALL_CLOSED_EVENT_NAME = "AdiveryOfferWallClosed"
+const val OFFER_WALL_MISSION_REWARDED_EVENT_NAME = "AdiveryOfferWallMissionRewarded"
 const val ON_ERROR_EVENT_NAME = "AdiveryOnError"
 
 class AdiveryModule(private val reactContext: ReactApplicationContext) :
@@ -145,6 +150,42 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
         sendEvent(reactContext, APP_OPEN_CLOSED_EVENT_NAME, params)
       }
 
+      override fun onOfferWallAdLoaded(placementId: String) {
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        sendEvent(reactContext, OFFER_WALL_LOADED_EVENT_NAME, params)
+      }
+
+      override fun onOfferWallAdShown(placementId: String) {
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        sendEvent(reactContext, OFFER_WALL_SHOWN_EVENT_NAME, params)
+      }
+
+      override fun onOfferWallAdClicked(placementId: String) {
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        sendEvent(reactContext, OFFER_WALL_CLICKED_EVENT_NAME, params)
+      }
+
+      override fun onOfferWallAdClosed(placementId: String) {
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        sendEvent(reactContext, OFFER_WALL_CLOSED_EVENT_NAME, params)
+      }
+
+      override fun onOfferWallMissionRewarded(
+        placementId: String,
+        currency: String,
+        rewardAmount: Int
+      ) {
+        val params = Arguments.createMap()
+        params.putString("placementId", placementId)
+        params.putString("currency", currency)
+        params.putInt("rewardAmount", rewardAmount)
+        sendEvent(reactContext, OFFER_WALL_MISSION_REWARDED_EVENT_NAME, params)
+      }
+
       override fun log(placementId: String, message: String) {
         val params = Arguments.createMap()
         params.putString("placementId", placementId)
@@ -168,6 +209,11 @@ class AdiveryModule(private val reactContext: ReactApplicationContext) :
   @ReactMethod
   fun prepareAppOpenAd(placementId: String) {
     Adivery.prepareAppOpenAd(reactContext.currentActivity, placementId)
+  }
+
+  @ReactMethod
+  fun prepareOfferWallAd(placementId: String) {
+    Adivery.prepareOfferWallAd(reactContext, placementId)
   }
 
   @ReactMethod

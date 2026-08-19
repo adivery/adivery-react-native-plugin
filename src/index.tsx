@@ -33,6 +33,11 @@ class AdiveryImpl {
   _onAppOpenShownSubscription?: EmitterSubscription;
   _onAppOpenClickSubscription?: EmitterSubscription;
   _onAppOpenCloseSubscription?: EmitterSubscription;
+  _onOfferWallLoadedSubscription?: EmitterSubscription;
+  _onOfferWallShownSubscription?: EmitterSubscription;
+  _onOfferWallClickSubscription?: EmitterSubscription;
+  _onOfferWallCloseSubscription?: EmitterSubscription;
+  _onOfferWallMissionRewardedSubscription?: EmitterSubscription;
   _onErrorSubscription?: EmitterSubscription;
 
   _onRewardedAdLoaded?: (placementId: string) => void;
@@ -47,6 +52,15 @@ class AdiveryImpl {
   _onAppOpenAdShown?: (placementId: string) => void;
   _onAppOpenAdClicked?: (placementId: string) => void;
   _onAppOpenAdClosed?: (placementId: string) => void;
+  _onOfferWallAdLoaded?: (placementId: string) => void;
+  _onOfferWallAdShown?: (placementId: string) => void;
+  _onOfferWallAdClicked?: (placementId: string) => void;
+  _onOfferWallAdClosed?: (placementId: string) => void;
+  _onOfferWallMissionRewarded?: (
+    placementId: string,
+    currency: string,
+    rewardAmount: number
+  ) => void;
   _onError?: (placementId: string, message: string) => void;
 
   REWARD_LOADED_EVENT_NAME = 'AdiveryRewardedLoaded';
@@ -61,6 +75,11 @@ class AdiveryImpl {
   APP_OPEN_SHOWN_EVENT_NAME = 'AdiveryAppOpenShown';
   APP_OPEN_CLICKED_EVENT_NAME = 'AdiveryAppOpenClick';
   APP_OPEN_CLOSED_EVENT_NAME = 'AdiveryAppOpenClosed';
+  OFFER_WALL_LOADED_EVENT_NAME = 'AdiveryOfferWallLoaded';
+  OFFER_WALL_SHOWN_EVENT_NAME = 'AdiveryOfferWallShown';
+  OFFER_WALL_CLICKED_EVENT_NAME = 'AdiveryOfferWallClick';
+  OFFER_WALL_CLOSED_EVENT_NAME = 'AdiveryOfferWallClosed';
+  OFFER_WALL_MISSION_REWARDED_EVENT_NAME = 'AdiveryOfferWallMissionRewarded';
   ON_ERROR_EVENT_NAME = 'AdiveryOnError';
 
   configure(appId: string) {
@@ -165,6 +184,50 @@ class AdiveryImpl {
         }
       }
     );
+    this._onOfferWallLoadedSubscription = eventEmmiter.addListener(
+      this.OFFER_WALL_LOADED_EVENT_NAME,
+      (event) => {
+        if (this._onOfferWallAdLoaded) {
+          this._onOfferWallAdLoaded(event.placementId);
+        }
+      }
+    );
+    this._onOfferWallShownSubscription = eventEmmiter.addListener(
+      this.OFFER_WALL_SHOWN_EVENT_NAME,
+      (event) => {
+        if (this._onOfferWallAdShown) {
+          this._onOfferWallAdShown(event.placementId);
+        }
+      }
+    );
+    this._onOfferWallClickSubscription = eventEmmiter.addListener(
+      this.OFFER_WALL_CLICKED_EVENT_NAME,
+      (event) => {
+        if (this._onOfferWallAdClicked) {
+          this._onOfferWallAdClicked(event.placementId);
+        }
+      }
+    );
+    this._onOfferWallCloseSubscription = eventEmmiter.addListener(
+      this.OFFER_WALL_CLOSED_EVENT_NAME,
+      (event) => {
+        if (this._onOfferWallAdClosed) {
+          this._onOfferWallAdClosed(event.placementId);
+        }
+      }
+    );
+    this._onOfferWallMissionRewardedSubscription = eventEmmiter.addListener(
+      this.OFFER_WALL_MISSION_REWARDED_EVENT_NAME,
+      (event) => {
+        if (this._onOfferWallMissionRewarded) {
+          this._onOfferWallMissionRewarded(
+            event.placementId,
+            event.currency,
+            event.rewardAmount
+          );
+        }
+      }
+    );
 
     this._onErrorSubscription = eventEmmiter.addListener(
       this.ON_ERROR_EVENT_NAME,
@@ -183,6 +246,9 @@ class AdiveryImpl {
   }
   prepareAppOpenAd(placementId: string) {
     AdiveryModule.prepareAppOpenAd(placementId);
+  }
+  prepareOfferWallAd(placementId: string) {
+    AdiveryModule.prepareOfferWallAd(placementId);
   }
   async isLoaded(placementId: string) {
     const isLoaded = await AdiveryModule.isLoaded(placementId);
@@ -220,6 +286,11 @@ class AdiveryImpl {
     onAppOpenAdShown = (_: string) => {},
     onAppOpenAdClicked = (_: string) => {},
     onAppOpenAdClosed = (_: string) => {},
+    onOfferWallAdLoaded = (_: string) => {},
+    onOfferWallAdShown = (_: string) => {},
+    onOfferWallAdClicked = (_: string) => {},
+    onOfferWallAdClosed = (_: string) => {},
+    onOfferWallMissionRewarded = (_: string, __: string, ___: number) => {},
     onError = (_: string, __: string) => {},
   }) {
     this._onError = onError;
@@ -238,6 +309,12 @@ class AdiveryImpl {
     this._onAppOpenAdClicked = onAppOpenAdClicked;
     this._onAppOpenAdShown = onAppOpenAdShown;
     this._onAppOpenAdClosed = onAppOpenAdClosed;
+
+    this._onOfferWallAdLoaded = onOfferWallAdLoaded;
+    this._onOfferWallAdClicked = onOfferWallAdClicked;
+    this._onOfferWallAdShown = onOfferWallAdShown;
+    this._onOfferWallAdClosed = onOfferWallAdClosed;
+    this._onOfferWallMissionRewarded = onOfferWallMissionRewarded;
   }
 
   destroy() {
@@ -257,6 +334,12 @@ class AdiveryImpl {
     this._onAppOpenCloseSubscription?.remove();
     this._onAppOpenLoadedSubscription?.remove();
     this._onAppOpenShownSubscription?.remove();
+
+    this._onOfferWallClickSubscription?.remove();
+    this._onOfferWallCloseSubscription?.remove();
+    this._onOfferWallLoadedSubscription?.remove();
+    this._onOfferWallShownSubscription?.remove();
+    this._onOfferWallMissionRewardedSubscription?.remove();
   }
 }
 

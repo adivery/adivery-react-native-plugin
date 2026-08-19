@@ -13,6 +13,7 @@ import {
 const appOpenPlacement = '9e9dd375-a1fe-4c2b-8432-b5bf8a5095f6';
 const rewardedPlacement = '3f97dc4d-3e09-4024-acaf-931862c03ba8';
 const interstitialPlacement = '0045a4aa-1498-4790-9eed-6e33ac870e5f';
+const offerWallPlacement = 'c11a9d90-043a-4a44-a6a8-f35e414bf675';
 const adiveryAppId = '7e27fb38-5aff-473a-998f-437b89426f66';
 const bannerPlacementId = '2f71ec44-f30a-4043-9cc1-f32347a07f8b';
 const nativePlacementId = '25928bf1-d4f7-432c-aaf7-1780602796c3';
@@ -22,6 +23,7 @@ Adivery.setUserId('test');
 Adivery.prepareInterstitialAd(interstitialPlacement);
 Adivery.prepareRewardedAd(rewardedPlacement);
 Adivery.prepareAppOpenAd(appOpenPlacement);
+Adivery.prepareOfferWallAd(offerWallPlacement);
 
 export default class App extends Component {
   state = {
@@ -68,6 +70,21 @@ export default class App extends Component {
       },
       onAppOpenAdClosed: (placementId) => {
         console.log('appOpen closed');
+      },
+      onOfferWallAdLoaded: (placementId) => {
+        console.log('offerWall loaded');
+      },
+      onOfferWallAdShown: (placementId) => {
+        console.log('offerWall shown');
+      },
+      onOfferWallAdClicked: (placementId) => {
+        console.log('offerWall clicked');
+      },
+      onOfferWallAdClosed: (placementId) => {
+        console.log('offerWall closed');
+      },
+      onOfferWallMissionRewarded: (placementId, currency, rewardAmount) => {
+        console.log('offerWall rewarded: ' + rewardAmount + ' ' + currency);
       },
       onError: (placementId, message) => {
         console.log('onError: ' + message);
@@ -122,6 +139,15 @@ export default class App extends Component {
       if (isLoaded) {
         console.log('calling show');
         Adivery.showAppOpenAd(appOpenPlacement);
+      }
+    });
+  }
+
+  showOfferWall() {
+    Adivery.isLoaded(offerWallPlacement).then((isLoaded) => {
+      if (isLoaded) {
+        console.log('calling show');
+        Adivery.showAd(offerWallPlacement);
       }
     });
   }
@@ -219,6 +245,9 @@ export default class App extends Component {
           </View>
           <View style={styles.btn}>
             <Button title="appOpen" onPress={this.showAppOpenAd} />
+          </View>
+          <View style={styles.btn}>
+            <Button title="offerwall" onPress={this.showOfferWall} />
           </View>
         </View>
 

@@ -13,6 +13,7 @@ const mockModule = {
   prepareRewardedAd: jest.fn(),
   prepareInterstitialAd: jest.fn(),
   prepareAppOpenAd: jest.fn(),
+  prepareOfferWallAd: jest.fn(),
   showAd: jest.fn(),
   showAppOpenAd: jest.fn(),
   isLoaded: jest.fn(() => Promise.resolve(true)),
@@ -99,6 +100,31 @@ it.each([
   ['AdiveryAppOpenShown', 'onAppOpenAdShown', { placementId: 'p' }, ['p']],
   ['AdiveryAppOpenClick', 'onAppOpenAdClicked', { placementId: 'p' }, ['p']],
   ['AdiveryAppOpenClosed', 'onAppOpenAdClosed', { placementId: 'p' }, ['p']],
+  [
+    'AdiveryOfferWallLoaded',
+    'onOfferWallAdLoaded',
+    { placementId: 'p' },
+    ['p'],
+  ],
+  ['AdiveryOfferWallShown', 'onOfferWallAdShown', { placementId: 'p' }, ['p']],
+  [
+    'AdiveryOfferWallClick',
+    'onOfferWallAdClicked',
+    { placementId: 'p' },
+    ['p'],
+  ],
+  [
+    'AdiveryOfferWallClosed',
+    'onOfferWallAdClosed',
+    { placementId: 'p' },
+    ['p'],
+  ],
+  [
+    'AdiveryOfferWallMissionRewarded',
+    'onOfferWallMissionRewarded',
+    { placementId: 'p', currency: 'coin', rewardAmount: 5 },
+    ['p', 'coin', 5],
+  ],
   ['AdiveryOnError', 'onError', { placementId: 'p', message: 'm' }, ['p', 'm']],
 ])('forwards %s to %s', (eventName, callbackName, event, expected) => {
   const callback = jest.fn();
@@ -109,7 +135,7 @@ it.each([
 
 it('covers every event the wrapper defines', () => {
   // Keep the table above in step with the wrapper: a new event needs a forwarding test.
-  expect(eventNames().length).toBe(13);
+  expect(eventNames().length).toBe(18);
 });
 
 it('forwards calls to the native module', async () => {
@@ -117,12 +143,14 @@ it('forwards calls to the native module', async () => {
   Adivery.prepareRewardedAd('r');
   Adivery.prepareInterstitialAd('i');
   Adivery.prepareAppOpenAd('o');
+  Adivery.prepareOfferWallAd('w');
   Adivery.showAd('i');
   Adivery.showAppOpenAd('o');
   expect(mockModule.setUserId).toHaveBeenCalledWith('user');
   expect(mockModule.prepareRewardedAd).toHaveBeenCalledWith('r');
   expect(mockModule.prepareInterstitialAd).toHaveBeenCalledWith('i');
   expect(mockModule.prepareAppOpenAd).toHaveBeenCalledWith('o');
+  expect(mockModule.prepareOfferWallAd).toHaveBeenCalledWith('w');
   expect(mockModule.showAd).toHaveBeenCalledWith('i');
   expect(mockModule.showAppOpenAd).toHaveBeenCalledWith('o');
 

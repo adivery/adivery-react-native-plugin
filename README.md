@@ -84,6 +84,25 @@ Adivery.isLoaded(appOpenPlacement).then((isLoaded) => {
     })
 ```
 
+### Display OfferWall Ad
+
+To display an offer wall ad first you need to prepare it. this makes SDK to prepare the offer wall ad and handle reloading it later.
+
+```js
+Adivery.prepareOfferWallAd(offerWallPlacement)
+```
+
+To show the offer wall ad to user use the following code.
+
+```js
+Adivery.isLoaded(offerWallPlacement).then((isLoaded) => {
+      if ( isLoaded ){
+        console.log("calling show")
+        Adivery.showAd(offerWallPlacement)
+      }
+    })
+```
+
 ### Add Callback for fullscreen Ads.
 
 If you want to get notified when a ad is loaded or user clicked on add you can use the following code
@@ -126,6 +145,21 @@ Adivery.addGlobalListener(
         },
         onAppOpenAdClosed: (placementId) => {
           console.log("appOpen closed")
+        },
+        onOfferWallAdLoaded: (placementId) => {
+          console.log("offerWall loaded")
+        },
+        onOfferWallAdShown: (placementId) => {
+          console.log("offerWall shown")
+        },
+        onOfferWallAdClicked: (placementId) => {
+          console.log("offerWall clicked")
+        },
+        onOfferWallAdClosed: (placementId) => {
+          console.log("offerWall closed")
+        },
+        onOfferWallMissionRewarded: (placementId, currency, rewardAmount) => {
+          console.log("offerWall rewarded: " + rewardAmount + " " + currency)
         },
         onError: (placementId, message) => {
           console.log("onError: " + message)
