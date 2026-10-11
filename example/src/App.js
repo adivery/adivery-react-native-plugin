@@ -20,10 +20,6 @@ const nativePlacementId = '25928bf1-d4f7-432c-aaf7-1780602796c3';
 
 Adivery.configure(adiveryAppId);
 Adivery.setUserId('test');
-Adivery.prepareInterstitialAd(interstitialPlacement);
-Adivery.prepareRewardedAd(rewardedPlacement);
-Adivery.prepareAppOpenAd(appOpenPlacement);
-Adivery.prepareOfferWallAd(offerWallPlacement);
 
 export default class App extends Component {
   state = {
@@ -73,6 +69,8 @@ export default class App extends Component {
       },
       onOfferWallAdLoaded: (placementId) => {
         console.log('offerWall loaded');
+        // Prepared by the offerwall button; show it as soon as it's ready.
+        Adivery.showAd(placementId);
       },
       onOfferWallAdShown: (placementId) => {
         console.log('offerWall shown');
@@ -90,6 +88,12 @@ export default class App extends Component {
         console.log('onError: ' + message);
       },
     });
+
+    // Prepare only after addGlobalListener has set the handlers: events that fire earlier are
+    // dropped. OfferWall is prepared on demand by its button (see loadOfferWall).
+    Adivery.prepareInterstitialAd(interstitialPlacement);
+    Adivery.prepareRewardedAd(rewardedPlacement);
+    Adivery.prepareAppOpenAd(appOpenPlacement);
   }
 
   componentWillUnmount() {
@@ -143,13 +147,10 @@ export default class App extends Component {
     });
   }
 
-  showOfferWall() {
-    Adivery.isLoaded(offerWallPlacement).then((isLoaded) => {
-      if (isLoaded) {
-        console.log('calling show');
-        Adivery.showAd(offerWallPlacement);
-      }
-    });
+  loadOfferWall() {
+    // The SDK doesn't prefetch another OfferWall after one closes, so prepare one per tap;
+    // onOfferWallAdLoaded shows it.
+    Adivery.prepareOfferWallAd(offerWallPlacement);
   }
 
   showBanner = () => {
@@ -247,7 +248,7 @@ export default class App extends Component {
             <Button title="appOpen" onPress={this.showAppOpenAd} />
           </View>
           <View style={styles.btn}>
-            <Button title="offerwall" onPress={this.showOfferWall} />
+            <Button title="offerwall" onPress={this.loadOfferWall} />
           </View>
         </View>
 

@@ -86,21 +86,33 @@ Adivery.isLoaded(appOpenPlacement).then((isLoaded) => {
 
 ### Display OfferWall Ad
 
-To display an offer wall ad first you need to prepare it. this makes SDK to prepare the offer wall ad and handle reloading it later.
+OfferWall needs Adivery SDK 4.10.0-alpha.1 or later (this plugin version pins it).
+
+To display an offer wall ad, first prepare it:
 
 ```js
 Adivery.prepareOfferWallAd(offerWallPlacement)
 ```
 
-To show the offer wall ad to user use the following code.
+Once `onOfferWallAdLoaded` fires (see the callbacks below), show it:
 
 ```js
-Adivery.isLoaded(offerWallPlacement).then((isLoaded) => {
-      if ( isLoaded ){
-        console.log("calling show")
-        Adivery.showAd(offerWallPlacement)
-      }
-    })
+Adivery.showAd(offerWallPlacement)
+```
+
+Unlike interstitial and rewarded ads, the SDK doesn't prepare another offer wall
+after one closes. Call `prepareOfferWallAd` again before each show. The example
+app prepares on tap and shows from `onOfferWallAdLoaded`:
+
+```js
+Adivery.addGlobalListener({
+  onOfferWallAdLoaded: (placementId) => {
+    Adivery.showAd(placementId)
+  },
+})
+
+// on tap:
+Adivery.prepareOfferWallAd(offerWallPlacement)
 ```
 
 ### Add Callback for fullscreen Ads.
