@@ -11,8 +11,6 @@
     "src",
     "lib",
     "android",
-    "cpp",
-    "adivery.podspec",
     "!lib/typescript/example",
     "!android/build",
     "!**/__tests__",
@@ -26,7 +24,7 @@
     "prepare": "bob build",
     "release": "release-it",
     "example": "yarn --cwd example",
-    "bootstrap": "yarn example && yarn && yarn pods"
+    "bootstrap": "yarn example && yarn"
   },
   "keywords": [
     "react-native",
