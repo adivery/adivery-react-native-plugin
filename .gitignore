@@ -68,3 +68,6 @@ lib/
 example/android/app/src/main/assets/index.android.bundle
 example/android/app/src/main/res/drawable-*/node_modules_*
 example/android/app/src/main/res/raw/keep.xml
+
+# jest --coverage output
+coverage/
