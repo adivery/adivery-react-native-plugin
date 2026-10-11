@@ -13,7 +13,7 @@ import {
 const appOpenPlacement = '9e9dd375-a1fe-4c2b-8432-b5bf8a5095f6';
 const rewardedPlacement = '3f97dc4d-3e09-4024-acaf-931862c03ba8';
 const interstitialPlacement = '0045a4aa-1498-4790-9eed-6e33ac870e5f';
-const offerWallPlacement = 'c11a9d90-043a-4a44-a6a8-f35e414bf675';
+const offerWallPlacement = '9cad440a-8271-49d2-8f81-0819268a5ce4';
 const adiveryAppId = '7e27fb38-5aff-473a-998f-437b89426f66';
 const bannerPlacementId = '2f71ec44-f30a-4043-9cc1-f32347a07f8b';
 const nativePlacementId = '25928bf1-d4f7-432c-aaf7-1780602796c3';
