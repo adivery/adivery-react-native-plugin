@@ -8,7 +8,6 @@ import {
   Banner,
   LargeBanner,
   MediumRectangle,
-  NativeAd,
 } from 'adivery';
 
 const appOpenPlacement = '9e9dd375-a1fe-4c2b-8432-b5bf8a5095f6';
@@ -157,7 +156,7 @@ export default class App extends Component {
 
   renderNative(nativeAd) {
     return (
-      <View style={{ padding: 10, width:"100%" }}>
+      <View style={{ padding: 10, width: '100%' }}>
         <View style={styles.adlayout}>
           <Button
             title={nativeAd.call_to_action}
@@ -165,20 +164,31 @@ export default class App extends Component {
               this.nativeClick(nativeAd);
             }}
           />
-          <View style={{flex:1}}>
-            <Text style={{padding: 4, fontSize:14}}>{nativeAd.headline}</Text>
-            <Text style={{padding:4, fontSize:12}}>{nativeAd.description}</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={{ padding: 4, fontSize: 14 }}>
+              {nativeAd.headline}
+            </Text>
+            <Text style={{ padding: 4, fontSize: 12 }}>
+              {nativeAd.description}
+            </Text>
           </View>
           <View>
             <Image
               style={{ width: 50, height: 50, borderRadius: 8 }}
               source={{ uri: 'data:image/png;base64,' + nativeAd.icon }}
             />
-            <Text style={{width: 50, fontSize: 10}}>{nativeAd.advertiser}</Text>
+            <Text style={{ width: 50, fontSize: 10 }}>
+              {nativeAd.advertiser}
+            </Text>
           </View>
         </View>
         <Image
-          style={{ padding:8, width: 300, aspectRatio: 16/9, borderRadius:16 }}
+          style={{
+            padding: 8,
+            width: 300,
+            aspectRatio: 16 / 9,
+            borderRadius: 16,
+          }}
           source={{ uri: 'data:image/png;base64,' + nativeAd.image }}
         />
       </View>
@@ -257,6 +267,6 @@ const styles = StyleSheet.create({
   },
   adlayout: {
     flexDirection: 'row',
-    alignItems: "center"
+    alignItems: 'center',
   },
 });

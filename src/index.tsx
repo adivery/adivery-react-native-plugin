@@ -10,7 +10,7 @@ import {
 import AdiveryNativeAd from './AdiveryNativeAd';
 const { AdiveryModule } = NativeModules;
 
-type NativeAd = {
+export type NativeAd = {
   id: string;
   headline: string;
   description: string;
@@ -270,5 +270,4 @@ export {
   SmartBanner,
   LargeBanner,
   MediumRectangle,
-  NativeAd,
 };

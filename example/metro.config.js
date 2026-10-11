@@ -1,4 +1,4 @@
-const {getDefaultConfig, mergeConfig} = require('@react-native/metro-config');
+const { getDefaultConfig, mergeConfig } = require('@react-native/metro-config');
 const path = require('path');
 const escape = require('escape-string-regexp');
 const pak = require('../package.json');
@@ -10,7 +10,7 @@ const config = {
   watchFolders: [root],
   resolver: {
     blockList: modules.map(
-      m => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`)
+      (m) => new RegExp(`^${escape(path.join(root, 'node_modules', m))}\\/.*$`)
     ),
     extraNodeModules: modules.reduce((acc, name) => {
       acc[name] = path.join(__dirname, 'node_modules', name);
