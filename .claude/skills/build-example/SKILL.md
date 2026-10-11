@@ -141,7 +141,9 @@ adb logcat -d -s ReactNativeJS:V | tail -100   # the example's console.log outpu
 - **Plugin native code:** `android/src/main/java/com/adivery/`:
   - `AdiveryModule.kt`: the native module. It calls the SDK's public API
     and forwards `AdiveryListener` callbacks as events.
-  - `AdiveryBannerAdViewManager.kt`: the banner view manager.
+  - `AdiveryBannerAdViewManager.kt`: the banner view manager. React Native
+    shares one manager between every banner, so each banner's ad view and
+    props live on its own `BannerViewGroup`, not on the manager.
   - `AdiveryPackage.kt`: registers both of the above.
 - **Native events:** emitted with `RCTDeviceEventEmitter`, and subscribed to
   with `NativeEventEmitter(NativeModules.AdiveryModule)` in JS. Event names

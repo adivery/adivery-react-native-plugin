@@ -9,7 +9,6 @@ import com.adivery.sdk.AdiveryAdListener
 import com.adivery.sdk.AdiveryBannerAdView
 import com.adivery.sdk.BannerSize
 import com.facebook.react.bridge.Arguments
-import com.facebook.react.bridge.Callback
 import com.facebook.react.bridge.WritableMap
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import com.facebook.react.uimanager.ThemedReactContext
@@ -24,7 +23,14 @@ const val BANNER_CLICKED_EVENT = "AdiveryBannerClicked"
 const val BANNER_ERROR_EVENT = "AdiveryBannerError"
 
 
+// One per <AdiveryBanner> on screen. React Native shares a single view manager between every
+// banner, so each banner's ad view and props live here rather than on the manager.
 class BannerViewGroup(context: Context) : ReactViewGroup(context) {
+  lateinit var banner: AdiveryBannerAdView
+  var placementId: String? = null
+  var isPlacementSet = false
+  var isBannerSizeSet = false
+
   public val measureAndLayout = Runnable {
     for (i in 0 until childCount) {
       val child = getChildAt(i)
@@ -40,6 +46,12 @@ class BannerViewGroup(context: Context) : ReactViewGroup(context) {
     super.requestLayout()
     post(measureAndLayout)
   }
+
+  fun loadAdOnceConfigured() {
+    if (isPlacementSet && isBannerSizeSet) {
+      banner.loadAd()
+    }
+  }
 }
 
 class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
@@ -48,18 +60,6 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
   val bannerSizeSmart = 1
   val bannerSizeLarge = 2
   val bannerSizeMediumRectangle = 3
-  lateinit var banner: AdiveryBannerAdView
-  lateinit var bannerSize: BannerSize
-
-  var placementId: String? = null
-
-  var isPlacementSet = false
-  var isBannerSizeSet = false
-
-  var onAdLoaded: Callback? = null
-  var onAdShown: Callback? = null
-  var onAdClicked: Callback? = null
-  var onError: Callback? = null
 
   override fun getName() = "AdiveryBannerAdView"
 
@@ -89,34 +89,35 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
   override fun createViewInstance(reactContext: ThemedReactContext): BannerViewGroup {
     Log.d("Adivery", "creating view instance")
     val layout = BannerViewGroup(reactContext)
-    banner = AdiveryBannerAdView(reactContext)
+    val banner = AdiveryBannerAdView(reactContext)
     banner.setBannerAdListener(object : AdiveryAdListener(){
       override fun onAdLoaded() {
         layout.post(layout.measureAndLayout)
         val params = Arguments.createMap()
-        params.putString("placementId", placementId)
+        params.putString("placementId", layout.placementId)
         sendEvent(reactContext, BANNER_LOADED_EVENT, params)
       }
 
       override fun onAdShown() {
         val params = Arguments.createMap()
-        params.putString("placementId", placementId)
+        params.putString("placementId", layout.placementId)
         sendEvent(reactContext, BANNER_SHOWN_EVENT, params)
       }
 
       override fun onAdClicked() {
         val params = Arguments.createMap()
-        params.putString("placementId", placementId)
+        params.putString("placementId", layout.placementId)
         sendEvent(reactContext, BANNER_CLICKED_EVENT, params)
       }
 
       override fun onError(reason: String) {
         val params = Arguments.createMap()
-        params.putString("placementId", placementId)
+        params.putString("placementId", layout.placementId)
         params.putString("message", reason)
         sendEvent(reactContext, BANNER_ERROR_EVENT, params)
       }
     })
+    layout.banner = banner
     layout.addView(banner)
     return layout
   }
@@ -124,12 +125,10 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
   @ReactProp(name = "placementId")
   fun setPlacementId(view: BannerViewGroup, placementId: String) {
     Log.d("Adivery", "set placement id")
-    this.placementId = placementId
-    banner.setPlacementId(placementId)
-    isPlacementSet = true
-    if (isBannerSizeSet) {
-      banner.loadAd()
-    }
+    view.placementId = placementId
+    view.banner.setPlacementId(placementId)
+    view.isPlacementSet = true
+    view.loadAdOnceConfigured()
   }
 
 
@@ -142,12 +141,9 @@ class AdiveryBannerAdViewManager : ViewGroupManager<BannerViewGroup>() {
       bannerSizeLarge -> BannerSize.LARGE_BANNER
       else -> BannerSize.MEDIUM_RECTANGLE
     }
-    banner.setBannerSize(bannerSizeModel)
-    isBannerSizeSet = true
-    this.bannerSize = bannerSizeModel
-    if (isPlacementSet) {
-      banner.loadAd()
-    }
+    view.banner.setBannerSize(bannerSizeModel)
+    view.isBannerSizeSet = true
+    view.loadAdOnceConfigured()
   }
 
 }
