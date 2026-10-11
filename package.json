@@ -28,7 +28,6 @@
   },
   "keywords": [
     "react-native",
-    "ios",
     "android"
   ],
   "repository": "https://github.com/adivery/adivery-react-native-plugin",
@@ -54,7 +53,6 @@
     "eslint-config-prettier": "^7.0.0",
     "eslint-plugin-prettier": "^3.1.3",
     "jest": "^26.0.1",
-    "pod-install": "^0.1.0",
     "prettier": "^2.0.5",
     "react": "16.13.1",
     "react-native": "0.63.4",

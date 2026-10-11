@@ -7261,11 +7261,6 @@ plugin-error@^0.1.2:
     arr-union "^2.0.1"
     extend-shallow "^1.1.2"
 
-pod-install@^0.1.0:
-  version "0.1.28"
-  resolved "https://registry.npmjs.org/pod-install/-/pod-install-0.1.28.tgz"
-  integrity sha512-tycTNkEKzmntX4tijJGtVSUK5ZM4yid7JHyZgs7T6bM040so/avYMUS2FyZMSb7BAiiqEkqAepRL1P8QvZxNnQ==
-
 posix-character-classes@^0.1.0:
   version "0.1.1"
   resolved "https://registry.npmjs.org/posix-character-classes/-/posix-character-classes-0.1.1.tgz"
