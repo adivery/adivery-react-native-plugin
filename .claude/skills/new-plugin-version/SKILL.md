@@ -263,7 +263,7 @@ python3 -I "$SKILL/bridge.py" check "$WORKDIR/aar-$TARGET/sdk.aar" . --baseline 
 [ -d node_modules ] && [ -d example/node_modules ] || yarn bootstrap
 ```
 
-### 4b. Typecheck, lint, tests, library build (what CI runs)
+### 4b. Typecheck, lint, tests, library build (what release-plugin requires)
 
 ```bash
 yarn typescript && yarn lint && yarn test && yarn prepare

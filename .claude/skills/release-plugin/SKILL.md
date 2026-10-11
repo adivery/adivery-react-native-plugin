@@ -61,7 +61,7 @@ curl -fsS -o /dev/null "https://repo1.maven.org/maven2/com/adivery/sdk/$SDK/sdk-
 [ -z "$(npm view "adivery@$VERSION" version 2>/dev/null)" ] || echo "STOP: adivery@$VERSION is already on npm"
 case "$VERSION" in *-*) echo "pre-release: npm dist-tag ${VERSION#*-}" | sed 's/\.[0-9]*$//' ;; *) echo "stable: npm dist-tag latest" ;; esac
 
-# 4. Checks (the same ones CI runs) and an up-to-date lib/.
+# 4. Checks (the repo has no CI, so this is the only place they run) and an up-to-date lib/.
 yarn typescript && yarn lint && yarn test && yarn prepare || echo "STOP: checks failed"
 ```
 
