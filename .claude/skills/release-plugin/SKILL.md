@@ -6,8 +6,8 @@ description: >-
   APK attached. Use only when the user explicitly asks to "release",
   "publish" or "cut" a plugin version. Every step is outward-facing, so it
   runs hard preflight gates first (up-to-date master, clean tree, checks
-  passing, version consistent and not yet published), dry-runs, and asks
-  before publishing. For building and running the example, see
+  passing, version consistent and not yet published), has the user try
+  the example on a real device, dry-runs, and asks before publishing. For building and running the example, see
   build-example. For bringing the plugin up to a new SDK release before
   this, see new-plugin-version.
 ---
@@ -65,12 +65,40 @@ case "$VERSION" in *-*) echo "pre-release: npm dist-tag ${VERSION#*-}" | sed 's/
 yarn typescript && yarn lint && yarn test && yarn prepare || echo "STOP: checks failed"
 ```
 
-Recommended as well: build the example with `build-example` (steps 3–4). It
-compiles the Kotlin against the pinned SDK, and step 7 below needs an APK
-anyway.
-
 Report the version, the dist-tag it will get, and the gate results before
 going on.
+
+## 5. Test the example on a real device (mandatory gate)
+
+An npm version can never be re-published, so this version must run on a
+real phone before step 6. Build the example with `build-example` steps 3–4
+(re-bundle the JS first, or the APK runs the old JS; the build also
+compiles the Kotlin against the pinned SDK). Then install and launch it, as
+in that skill's step 5, which is mandatory here:
+
+```bash
+adb devices -l     # STOP if no device is listed: ask the user to connect one. Never skip this gate.
+adb install -r example/android/app/build/outputs/apk/debug/app-debug.apk
+adb shell dumpsys window | grep -E "isKeyguardShowing"   # must be false
+adb logcat -c
+adb shell am start -n com.example.adivery/.MainActivity
+```
+
+Ask the user to load and show each ad format in the example, native
+included, and watch the log meanwhile:
+
+```bash
+adb logcat -d -s ReactNativeJS:V | tail -100   # the example's console.log lines: loaded, shown, errors
+adb logcat -d -b crash                         # must be empty: a FATAL EXCEPTION is a STOP
+```
+
+**Wait for the user's explicit "it works, continue"** before step 6. Keep
+this APK: step 7 attaches it if the release build can't be signed.
+
+- **Locked phone:** the app pauses. Wake it with
+  `adb shell input keyevent KEYCODE_WAKEUP` and ask the user to unlock it.
+- **Wireless ADB:** it drops often, especially during long builds. Wait for
+  `adb devices` to list the device again before giving up.
 
 ## 6. Publish to npm (and tag) with release-it
 
