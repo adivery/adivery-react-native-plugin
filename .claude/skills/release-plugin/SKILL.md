@@ -102,13 +102,34 @@ this APK: step 7 attaches it if the release build can't be signed.
 
 ## 6. Publish to npm (and tag) with release-it
 
-### Authentication
-- You need to be logged in to npm (`npm whoami` prints the user), or have
-  an automation token in `~/.npmrc`. Automation tokens may get a 401 on
-  `whoami` and still publish.
-- If neither is set up, tell the user: "You need to authenticate with npm.
-  Run `npm login` in your terminal (type `! npm login` in this chat) and
-  follow the prompts."
+### Authentication: publish with `NPM_TOKEN`, not the `npm login` token
+- **Use the `NPM_TOKEN` env var.** It holds the `adivery` account's access
+  token, which publishes without a 2FA code. The token that `npm login`
+  writes to `~/.npmrc` is a session token. Every publish with it fails with
+  `E403 … Two-factor authentication or granular access token with bypass
+  2fa enabled is required`, because `--ci` gives npm no terminal to ask
+  for the code. That happened four times for 4.10.0-alpha.3.
+- **npm reads tokens only from config files**, so point it at `NPM_TOKEN`
+  through a scratch userconfig. Write the literal text `${NPM_TOKEN}`, and
+  npm expands it itself, so the token never lands on disk or in output:
+  ```bash
+  NPMRC=<scratchpad>/npmrc-envtoken
+  printf 'registry=https://registry.npmjs.org/\n//registry.npmjs.org/:_authToken=${NPM_TOKEN}\n' > "$NPMRC"
+  chmod 600 "$NPMRC"
+  NPM_CONFIG_USERCONFIG="$NPMRC" npm whoami    # must print adivery
+  ```
+- **Prefix every release-it and npm publish command with
+  `NPM_CONFIG_USERCONFIG="$NPMRC"`**, the dry-run too, since it checks
+  `npm whoami`. Shell state doesn't carry between commands, so an `export`
+  is lost.
+- **If `NPM_TOKEN` is unset or its `whoami` fails**, fall back to a login
+  session. Ask the user to run `npm login` in a normal terminal outside
+  Claude Code: `! npm login` crashes ("Exit handler never called!"),
+  because the browser login needs a real terminal. Then publish with an
+  OTP (below). Session tokens expire within hours.
+- npm has warned that tokens that bypass 2FA are being restricted for
+  direct publishing. If `NPM_TOKEN` starts getting the same E403, the OTP
+  route is what's left.
 
 ### The command
 
@@ -121,7 +142,7 @@ invocation that works under those conditions:
 # --no-git.commit                   the release commit already exists; don't make an empty one
 # --no-git.requireCleanWorkingDir   tolerate untracked example build artifacts
 # --ci                              non-interactive (no TTY in this harness)
-node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --ci
+NPM_CONFIG_USERCONFIG="$NPMRC" node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --ci
 ```
 
 - Use the `--no-git.requireCleanWorkingDir` form. `--git.requireCleanWorkingDir=false`
@@ -142,7 +163,7 @@ node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireClea
   npm, the tag and the push only. Step 7 then creates the GitHub release
   with the APK attached, after the user confirms.
   ```bash
-  node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --no-github.release --ci
+  NPM_CONFIG_USERCONFIG="$NPMRC" node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --no-github.release --ci
   ```
 - **`GITHUB_TOKEN` is not set:** run the command without
   `--no-github.release`. With no token, release-it prints a pre-filled web
@@ -152,17 +173,20 @@ node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireClea
   as the latest release" before publishing.
 
 ### If npm requires 2FA or an OTP
-If npm rejects with `E403 Two-factor authentication required` or `EOTP`, ask
-the user for their OTP and retry. A failed publish is harmless.
+With `NPM_TOKEN` this shouldn't happen. If the E403 above or `EOTP` shows
+up, first check that the command carried `NPM_CONFIG_USERCONFIG`. On the
+login-session fallback, ask the user for a fresh OTP and retry right away,
+because codes expire in about 30 seconds. A failed publish is harmless.
 
 ```bash
 node_modules/.bin/release-it --no-increment --no-git.commit --no-git.requireCleanWorkingDir --ci --npm.publishArgs="--otp=<OTP>"
 ```
 
-Alternatively, a Granular Access Token with the "bypass 2FA" option needs no
-OTP.
-
 ### Verify (with the Read tool or a raw shell, not a filtering proxy)
+npm answers the publish with `202 Accepted`, and the version takes about
+90 seconds to show on the registry. An E404 right after `✔ npm publish` is
+normal, so poll until it appears. Don't re-run release-it.
+
 ```bash
 npm view adivery version dist-tags          # stable: latest == VERSION; pre-release: <preid> == VERSION
 git ls-remote origin "refs/tags/v$VERSION"  # tag pushed
@@ -170,15 +194,15 @@ git ls-remote origin "refs/tags/v$VERSION"  # tag pushed
 
 ### Fallback: plain `npm publish` (only if release-it itself is broken)
 ```bash
-npm publish                     # stable
-npm publish --tag alpha         # pre-release: the --tag is required, or it becomes "latest"
+NPM_CONFIG_USERCONFIG="$NPMRC" npm publish                 # stable
+NPM_CONFIG_USERCONFIG="$NPMRC" npm publish --tag alpha     # pre-release: the --tag is required, or it becomes "latest"
 ```
 
 An `E404 Not Found` for a previously published package usually means you're
-not authenticated. Check `~/.npmrc` for a valid `_authToken`, without
-printing it.
+not authenticated. Check that `NPM_CONFIG_USERCONFIG` was set and that
+`NPM_CONFIG_USERCONFIG="$NPMRC" npm whoami` prints `adivery`.
 
-**Security:** never print the contents of `~/.npmrc` or `$GITHUB_TOKEN`. If
+**Security:** never print the contents of `~/.npmrc`, `$NPM_TOKEN` or `$GITHUB_TOKEN`. If
 an npm or GitHub token shows up in output, tell the user to revoke it
 (npmjs.com → Access Tokens; GitHub → Developer settings → Personal access
 tokens).
